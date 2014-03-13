@@ -15,6 +15,7 @@ logging.basicConfig(level=config.LOGGING_LEVEL, format='%(asctime)s - %(name)s -
 logger = logging.getLogger("indexer")
 es = Elasticsearch()
 indexed_images = 0
+start_time = 0
 
 # disable info log for unneeded
 logging.getLogger("elasticsearch").setLevel(logging.ERROR)
@@ -65,14 +66,18 @@ def index_image(folder_path, file_name):
     indexed_images += 1
     if indexed_images % config.INDEX_LOG_INTERVAL == 0:
         logger.info("Indexed %d images", indexed_images)
+        now = time.time()
+        logger.info("Time used: %d s", now - start_time)
+        logger.info("Image per second: %s", indexed_images / (now - start_time))
+
 
 
 def index_image_folder(folder_path):
     for f in listdir(folder_path):
         path = join(folder_path, f)
         if isfile(path):
-            is_image = any(path.endswith("." + ext) for ext in config.IMAGE_EXTENSIONS)   # check extension, only index images
-            if is_image:
+            is_image = any(path.endswith("." + ext) for ext in config.IMAGE_EXTENSIONS)
+            if is_image:  # check extension, only index images
                 index_image(folder_path=folder_path, file_name=f)
         elif isdir(path):
             index_image_folder(path)
@@ -80,10 +85,10 @@ def index_image_folder(folder_path):
 
 
 if __name__ == "__main__":
-    start = time.time()
-    logger.info("Start indexer: %d", start)
+    start_time = time.time()
+    logger.info("Start indexer: %d", start_time)
     create_mapping()
     index_image_folder(config.IMAGE_FOLDER)
     end = time.time()
-    logger.info("Finish indexer: %d", start)
-    logger.info("Time used: %d s", end - start)
+    logger.info("Finish indexer: %d", end)
+    logger.info("Total time used: %d s", end - start_time)

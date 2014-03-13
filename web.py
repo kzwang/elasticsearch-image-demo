@@ -2,7 +2,7 @@ import base64
 import json
 import logging
 from os.path import join
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, FileSystemBytecodeCache
 import tornado
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.options import define, options
@@ -11,8 +11,12 @@ from tornado import gen
 import config
 import utils
 
+
+cache = None
+if config.TEMPLATE_CACHE_DIR:
+    cache = FileSystemBytecodeCache(directory=config.TEMPLATE_CACHE_DIR)
 env = Environment(loader=FileSystemLoader("template"),
-                  bytecode_cache=None, cache_size=100,
+                  bytecode_cache=cache, cache_size=100,
                   trim_blocks=True)
 
 
