@@ -21,7 +21,11 @@
 </nav>
 
 <div class="page-header">
-    <h1>Images</h1>
+    {% if search_file_name %}
+    <h1>Images similar to {{ search_file_name }}</h1>
+    {% else %}
+    <h1>Random Images</h1>
+    {% endif %}
 </div>
 <div class="container-fluid">
     <div class="row">
@@ -37,7 +41,9 @@
 
                     <p>
                         File: {{ filename }}<br/>
+                        {% if search_file_name %}
                         Score: {{ hit['_score'] }}
+                        {% endif %}
                     </p>
 
                     <div class="btn-group">

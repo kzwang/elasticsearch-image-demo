@@ -62,12 +62,22 @@ class IndexPageHandler(BaseHandler):
                     }
                 }
             }
+        else:
+            search_request['query'] = {
+                "function_score": {
+                    "query": {
+                        "match_all": {}
+                    },
+                    "random_score": {}
+                }
+            }
         request = HTTPRequest(url=utils.get_es_url() + "_search?size=" + str(config.RESULT_SIZE), method='POST', body=json.dumps(search_request))
         response = yield http_client.fetch(request)
         search_result = json.loads(response.body)
         args = {
             "search_result": search_result,
             "features": config.INDEX_FEATURES,
+            "search_file_name": filename,
             "image_base_url": config.IMAGE_BASE_URL
         }
         self.render_template("index.html", template_args=args)
