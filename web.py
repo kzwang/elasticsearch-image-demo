@@ -43,26 +43,34 @@ class IndexPageHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         filename = self.get_single_argument("filename")
+        url = self.get_single_argument("url")
         http_client = AsyncHTTPClient()
         search_request = {
             "fields": [
                 "filename"
             ]
         }
-        if filename is not None:
+        if filename is not None or url is not None:  # need to search image
             feature = self.get_single_argument("feature") or "CEDD"
-            path = join(config.IMAGE_FOLDER, filename)
+            if filename is not None:
+                path = join(config.IMAGE_FOLDER, filename)
+                image_content = utils.get_file_base64(path)
+            else:
+                image_response = yield http_client.fetch(url)
+                if image_response.code >= 400:
+                    raise HTTPError(500)
+                image_content = base64.b64encode(image_response.body)
             search_request['query'] = {
                 "image": {
                     "img": {
-                        "image": utils.get_file_base64(path),
+                        "image": image_content,
                         "feature": feature,
                         "hash": "BIT_SAMPLING",
                         "limit": config.SEARCH_HASH_LIMIT
                     }
                 }
             }
-        else:
+        else:  # no need to search, return random images
             search_request['query'] = {
                 "function_score": {
                     "query": {
@@ -78,7 +86,10 @@ class IndexPageHandler(BaseHandler):
             "search_result": search_result,
             "features": config.INDEX_FEATURES,
             "search_file_name": filename,
-            "image_base_url": config.IMAGE_BASE_URL
+            "search_url": url,
+            "search_feature": feature,
+            "image_base_url": config.IMAGE_BASE_URL,
+            "static_base_url": config.STATIC_BASE_URL
         }
         self.render_template("index.html", template_args=args)
 
@@ -90,7 +101,8 @@ settings = {
 }
 application = tornado.web.Application([
     (r"/", IndexPageHandler),
-    (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': config.IMAGE_FOLDER}),
+    (r'/image/(.*)', tornado.web.StaticFileHandler, {'path': config.IMAGE_FOLDER}),
+    (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': "static"}),
 ], **settings)
 
 

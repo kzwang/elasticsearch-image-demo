@@ -3,13 +3,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Elasticsearch Image Demo</title>
+    <title>Elasticsearch Image Demo{% if search_file_name or search_url %} - Images similar to {{ search_file_name or search_url }} using {{ search_feature }}{% endif %}</title>
     <meta name="description" content="Elasticsearch Image Plugin is an Content Based Image Retrieval Plugin for Elasticsearch using LIRE (Lucene Image Retrieval)">
 
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="{{ static_base_url }}/js/demo.js"></script>
 </head>
+
 
 <body>
 <nav class="navbar navbar-default" role="navigation">
@@ -17,12 +19,38 @@
         <div class="navbar-header">
             <a class="navbar-brand" href="/">Elasticsearch Image Plugin Demo</a>
         </div>
+
+        <div class="collapse navbar-collapse">
+            <form class="navbar-form navbar-left" role="search">
+                <div class="form-group">
+                    <input type="text" name="url" class="form-control input-large" placeholder="Image URL for search">
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        Search similar images <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        {% for feature in features %}
+                            <li><a href="javascript:;" onclick="searchURL('{{ feature }}');">{{ feature }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </form>
+        </div>
     </div>
 </nav>
 
+
 <div class="page-header">
-    {% if search_file_name %}
-    <h1>Images similar to {{ search_file_name }}</h1>
+    {% if search_file_name or search_url %}
+    <h1>Images similar to
+        {% if search_file_name %}
+            <a href="{{ image_base_url }}/{{ search_file_name }}">{{ search_file_name }}</a>
+        {% elif search_url %}
+            <a href="{{ search_url }}">{{ search_url }}</a>
+        {% endif %}
+        using {{ search_feature }}</h1>
     {% else %}
     <h1>Random Images</h1>
     {% endif %}
@@ -41,7 +69,7 @@
 
                     <p>
                         File: {{ filename }}<br/>
-                        {% if search_file_name %}
+                        {% if search_file_name or search_url %}
                         Score: {{ hit['_score'] }}
                         {% endif %}
                     </p>
