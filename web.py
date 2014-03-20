@@ -50,16 +50,28 @@ class IndexPageHandler(BaseHandler):
                 "filename"
             ]
         }
-        if filename is not None or url is not None:  # need to search image
-            feature = self.get_single_argument("feature") or "CEDD"
-            if filename is not None:
-                path = join(config.IMAGE_FOLDER, filename)
-                image_content = utils.get_file_base64(path)
-            else:
-                image_response = yield http_client.fetch(url)
-                if image_response.code >= 400:
-                    raise HTTPError(500)
-                image_content = base64.b64encode(image_response.body)
+        feature = self.get_single_argument("feature") or "CEDD"
+
+        if filename is not None:
+            index_id = base64.encodestring(filename).strip()
+            search_request['query'] = {
+                "image": {
+                    "img": {
+                        "index": config.INDEX_NAME,
+                        "type": config.TYPE_NAME,
+                        "id": index_id,
+                        "path": "img",
+                        "feature": feature,
+                        "hash": "BIT_SAMPLING",
+                        "limit": config.SEARCH_HASH_LIMIT
+                    }
+                }
+            }
+        elif url is not None:
+            image_response = yield http_client.fetch(url)
+            if image_response.code >= 400:
+                raise HTTPError(500)
+            image_content = base64.b64encode(image_response.body)
             search_request['query'] = {
                 "image": {
                     "img": {

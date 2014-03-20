@@ -36,7 +36,17 @@ def create_mapping():
             "properties": {
                 "img": {
                     "type": "image",
-                    "feature": features
+                    "feature": features,
+                    "metadata": {
+                        "jpeg.image_width": {
+                            "type": "string",
+                            "store": "yes"
+                        },
+                        "jpeg.image_height": {
+                            "type": "string",
+                            "store": "yes"
+                        }
+                    }
                 },
                 "filename": {
                     "type": "string",
